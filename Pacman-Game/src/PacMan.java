@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.util.HashSet;
 import javax.swing.*;
 
 public class PacMan extends JPanel {
@@ -19,7 +20,7 @@ public class PacMan extends JPanel {
   
   private int rowCount = 21;
   private int colCount = 19;
-  private int tileSize = 32;
+  private int tileSize = 32; // pixel size (px)
   private int boardWidth = colCount * tileSize;
   private int boardHeight = rowCount * tileSize;
 
@@ -34,6 +35,37 @@ public class PacMan extends JPanel {
   private Image pacmanLeftImg;
   private Image pacmanRightImg;
 
+  // X = wall, O = skip, P = pac man, ' ' = food
+  // Ghosts: b = blue, o = orange, p = pink, r = red
+  private String[] tileMap = {
+    "XXXXXXXXXXXXXXXXXXX",
+    "X        X        X",
+    "X XX XXX X XXX XX X",
+    "X                 X",
+    "X XX X XXXXX X XX X",
+    "X    X       X    X",
+    "XXXX XXXX XXXX XXXX",
+    "OOOX X       X XOOO",
+    "XXXX X XXrXX X XXXX",
+    "O       bpo       O",
+    "XXXX X XXXXX X XXXX",
+    "OOOX X       X XOOO",
+    "XXXX X XXXXX X XXXX",
+    "X        X        X",
+    "X XX XXX X XXX XX X",
+    "X  X     P     X  X",
+    "XX X X XXXXX X X XX",
+    "X    X   X   X    X",
+    "X XXXXXX X XXXXXX X",
+    "X                 X",
+    "XXXXXXXXXXXXXXXXXXX" 
+  };
+
+  // object representations in the game
+  HashSet<Block> walls;
+  HashSet<Block> foods;
+  HashSet<Block> ghosts;
+  Block pacman;
 
   PacMan() {
     setPreferredSize(new Dimension(boardWidth, boardHeight));
@@ -50,5 +82,55 @@ public class PacMan extends JPanel {
     pacmanDownImg = new ImageIcon(getClass().getResource("./pacmanDown.png")).getImage();
     pacmanLeftImg = new ImageIcon(getClass().getResource("./pacmanLeft.png")).getImage();
     pacmanRightImg = new ImageIcon(getClass().getResource("./pacmanRight.png")).getImage();
+
+    loadMap();
+    System.out.println(walls.size());
+    System.out.println(foods.size());
+    System.out.println(ghosts.size()); 
+  }
+
+  public void loadMap() {
+    walls = new HashSet<>();
+    foods = new HashSet<>();
+    ghosts = new HashSet<>();
+    
+    for (int r = 0; r < rowCount; r++) {
+      for (int c = 0; c < colCount; c ++) {
+        String row = tileMap[r];
+        char tileMapChar = row.charAt(c);
+
+        int x = c * tileSize; // x-pos is how many tiles from the left
+        int y = r * tileSize; // y-pos is how many rows from the top
+
+        switch (tileMapChar) {
+          case 'X' -> { // block wall
+              Block wall = new Block(wallImg, x, y, tileSize, tileSize);
+              walls.add(wall);
+              }
+          case 'b' -> { // blue ghost
+              Block ghost = new Block(blueGhostImg, x, y, tileSize, tileSize);
+              ghosts.add(ghost);
+              }
+          case 'o' -> { // orange ghost
+              Block orangeGhost = new Block(orangeGhostImg, x, y, tileSize, tileSize);
+              ghosts.add(orangeGhost);
+              }
+          case 'p' -> { // pink ghost
+              Block pinkGhost = new Block(pinkGhostImg, x, y, tileSize, tileSize);
+              ghosts.add(pinkGhost);
+              }
+          case 'r' -> { // red ghost
+              Block redGhost = new Block(redGhostImg, x, y, tileSize, tileSize);
+              ghosts.add(redGhost);
+              }
+          case 'P' -> // pink ghost
+            pacman = new Block(pacmanRightImg, x, y, tileSize, tileSize);
+          case ' ' -> { // food
+              Block food = new Block(null, x + 14, y + 14, 4, 4);
+              foods.add(food);
+              }
+        }
+      }
+    }
   }
 }
