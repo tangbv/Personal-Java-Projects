@@ -67,6 +67,9 @@ public class PacMan extends JPanel {
   HashSet<Block> ghosts;
   Block pacman;
 
+  /**
+   * PacMan game constructor
+   */
   PacMan() {
     setPreferredSize(new Dimension(boardWidth, boardHeight));
     setBackground(Color.BLACK);
@@ -84,11 +87,11 @@ public class PacMan extends JPanel {
     pacmanRightImg = new ImageIcon(getClass().getResource("./pacmanRight.png")).getImage();
 
     loadMap();
-    System.out.println(walls.size());
-    System.out.println(foods.size());
-    System.out.println(ghosts.size()); 
   }
 
+  /**
+   * loadMap function to load the map with objects
+   */
   public void loadMap() {
     walls = new HashSet<>();
     foods = new HashSet<>();
@@ -131,6 +134,36 @@ public class PacMan extends JPanel {
               }
         }
       }
+    }
+  }
+
+  /**
+   * PaintComponent function to paint components
+   * @param g the graphic to paint
+   */
+  public void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    draw(g);
+  }
+
+  /**
+   * draw method to draw components
+   * @param g the graphic to draw
+   */
+  public void draw(Graphics g) {
+    g.drawImage(pacman.image, pacman.x, pacman.y, pacman.width, pacman.height, null);
+
+    for (Block ghost : ghosts) {
+      g.drawImage(ghost.image, ghost.x, ghost.y, ghost.width, ghost.height, null);
+    }
+
+    for (Block wall : walls) {
+      g.drawImage(wall.image, wall.x, wall.y, wall.width, wall.height, null);
+    }
+
+    g.setColor(Color.WHITE);
+    for (Block food : foods) {
+      g.fillRect(food.x, food.y, food.width, food.height);
     }
   }
 }
