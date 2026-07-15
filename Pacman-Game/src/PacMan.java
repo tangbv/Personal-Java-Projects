@@ -1,11 +1,15 @@
 import java.awt.*;
+import java.awt.event.*;
 import java.util.HashSet;
 import javax.swing.*;
 
-public class PacMan extends JPanel {
+public class PacMan extends JPanel implements ActionListener, KeyListener {
   class Block {
     int startX, startY, x, y, width, height;
     Image image;
+    char direction = 'U'; // U D L R
+    int velocityX = 0;
+    int velocityY = 0;
 
     Block(Image image, int x, int y, int width, int height) {
       this.image = image;
@@ -15,6 +19,48 @@ public class PacMan extends JPanel {
       this.height= height;
       this.startX = x;
       this.startY = y;
+    }
+    
+    /**
+     * method to update pacman or ghosts direction of movement
+     * @param direction direction to move
+     */
+    void updateDirection(char direction) {
+      char prevDir = this.direction;
+      this.direction = direction;
+      updateVelocity();
+
+      this.x += this.velocityX;
+      this.y += this.velocityY;
+      for (Block wall : walls) {
+        if (collision(this, wall)) { // used for both pacman and ghosts
+          this.x -= this.velocityX;
+          this.y -= this.velocityY;
+          this.direction = prevDir;
+          updateVelocity();
+        }
+      }
+    }
+
+    void updateVelocity() {
+      switch(this.direction) {
+        case 'U' -> {
+            this.velocityX = 0;
+            this.velocityY = -tileSize / 4; // up 8 px
+        }
+        case 'D' -> {
+            this.velocityX = 0;
+            this.velocityY = tileSize / 4; // down 8 px
+        }
+        case 'L' -> {
+            this.velocityX = -tileSize / 4;
+            this.velocityY = 0; // left 8 px
+        }
+        case 'R' -> {
+            this.velocityX = tileSize / 4;
+            this.velocityY = 0; // right 8 px
+        }
+      }
     }
   }
   
@@ -67,12 +113,16 @@ public class PacMan extends JPanel {
   HashSet<Block> ghosts;
   Block pacman;
 
+  Timer gameLoop;
+
   /**
    * PacMan game constructor
    */
   PacMan() {
     setPreferredSize(new Dimension(boardWidth, boardHeight));
     setBackground(Color.BLACK);
+    addKeyListener(this);
+    setFocusable(true);
 
     // now load images
     wallImg = new ImageIcon(getClass().getResource("./wall.png")).getImage();
@@ -87,6 +137,8 @@ public class PacMan extends JPanel {
     pacmanRightImg = new ImageIcon(getClass().getResource("./pacmanRight.png")).getImage();
 
     loadMap();
+    gameLoop = new Timer(50, this); // 50 milliseconds, 20 fps (1000/50)
+    gameLoop.start();
   }
 
   /**
@@ -164,6 +216,81 @@ public class PacMan extends JPanel {
     g.setColor(Color.WHITE);
     for (Block food : foods) {
       g.fillRect(food.x, food.y, food.width, food.height);
+    }
+  }
+
+  /**
+   * update object x and y positions
+   */
+  public void move() {
+    pacman.x += pacman.velocityX;
+    pacman.y += pacman.velocityY;
+
+    for (Block wall : walls) {
+      if (collision (pacman, wall)) {
+        pacman.x -= pacman.velocityX;
+        pacman.y -= pacman.velocityY;
+        break;
+      }
+    }
+  }
+
+  /**
+   * detect pacman collisions between ghosts, walls, food 
+   * @param a pacman 
+   * @param b other object
+   * @return boolean if collision was detected
+   */
+  public boolean collision(Block a, Block b) {
+    return a.x < b.x + b.width &&
+           a.x + a.width > b.x &&
+           a.y < b.y + b.height &&
+           a.y + a.height > b.y; 
+  }
+
+  @Override
+  public void actionPerformed(ActionEvent e) {
+    move();
+    repaint();
+  }
+
+  @Override
+  public void keyTyped(KeyEvent e) {} // unused b/c using only arrow keys
+
+  @Override
+  public void keyPressed(KeyEvent e) {} // do not want to hold arrows to move
+
+  @Override
+  public void keyReleased(KeyEvent e) {
+    // System.out.println("KeyEvent: " + e.getKeyCode());
+    switch (e.getKeyCode()) {
+      case KeyEvent.VK_UP -> {
+          pacman.updateDirection('U');
+      }
+      case KeyEvent.VK_DOWN -> {
+          pacman.updateDirection('D');
+      }
+      case KeyEvent.VK_LEFT -> {
+          pacman.updateDirection('L');
+      }
+      case KeyEvent.VK_RIGHT -> {
+          pacman.updateDirection('R');
+      }
+    }
+
+    switch (pacman.direction) {
+      case 'U' -> {
+        pacman.image = pacmanUpImg;
+      }
+      case 'D' -> {
+        pacman.image = pacmanDownImg;
+      }
+      case 'L' -> {
+        pacman.image = pacmanLeftImg;
+      }
+      case 'R' -> {
+        pacman.image = pacmanRightImg;
+      }
     }
   }
 }
