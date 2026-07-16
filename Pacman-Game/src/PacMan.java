@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashSet;
+import java.util.Random;
 import javax.swing.*;
 
 public class PacMan extends JPanel implements ActionListener, KeyListener {
@@ -114,6 +115,8 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
   Block pacman;
 
   Timer gameLoop;
+  char[] directions = {'U', 'D', 'L', 'R'};
+  Random random = new Random();
 
   /**
    * PacMan game constructor
@@ -137,6 +140,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     pacmanRightImg = new ImageIcon(getClass().getResource("./pacmanRight.png")).getImage();
 
     loadMap();
+    for (Block ghost : ghosts) {
+      char newDir = directions[random.nextInt(4)];
+      ghost.updateDirection(newDir);
+    }
     gameLoop = new Timer(50, this); // 50 milliseconds, 20 fps (1000/50)
     gameLoop.start();
   }
@@ -233,6 +240,23 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         break;
       }
     }
+    
+    for (Block ghost : ghosts) {
+      if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
+        ghost.updateDirection('U');
+      }
+      
+      ghost.x += ghost.velocityX;
+      ghost.y += ghost.velocityY;
+      for (Block wall : walls) {
+        if (collision (ghost, wall) || ghost.x <= 0 || ghost.x + ghost.width >= boardWidth) {
+          ghost.x -= ghost.velocityX;
+          ghost.y -= ghost.velocityY;
+          char newDir = directions[random.nextInt(4)];
+          ghost.updateDirection(newDir);
+        }
+    }
+    } 
   }
 
   /**
