@@ -134,6 +134,8 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
   boolean gameOver = false;
   boolean paused = false;
 
+  char nextDirection = ' '; // next direction to make when possible
+
   /**
    * PacMan game constructor
    */
@@ -251,6 +253,71 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
   }
 
+  // Helper methods to queue next immediate move for pacman to make when possible
+  /**
+   * CanTurn method to check if pacman is lined up with empty space to turn
+   * @param direction next direction to move
+   * @return boolean value if direction change is valid
+   */
+  private boolean canTurn(char direction) {
+    if (direction == 'U' || direction == 'D') {
+      return pacman.x % tileSize == 0;
+    }
+    if (direction == 'L' || direction == 'R') {
+      return pacman.y % tileSize == 0;
+    }
+    return false;
+  }
+  
+  /**
+   * CanMove method checks if the next step in a direction would hit a wall
+   * @param block pacman object to check
+   * @param direction next direction to move
+   * @return boolean value if potential collision is found
+   */
+  private boolean canMove(Block block, char direction) {
+    int nextX = block.x;
+    int nextY = block.y;
+
+    switch (direction) {
+      case 'U' -> nextY -= tileSize / 4;
+      case 'D' -> nextY += tileSize / 4;
+      case 'L' -> nextX -= tileSize / 4;
+      case 'R' -> nextX += tileSize / 4;
+    }
+    Block probe = new Block(null, nextX, nextY, block.width, block.height);
+    for (Block wall : walls) {
+      if (collision(probe, wall)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * applyNextTurn method to apply next direction change
+   */
+  private void applyNextTurn() {
+    if (nextDirection == ' ') {
+      return;
+    }
+    if (!canTurn(nextDirection)) {
+      return;
+    }
+    if (!canMove(pacman, nextDirection)) {
+      return;
+    }
+    pacman.direction = nextDirection;
+    pacman.updateVelocity();
+    switch (pacman.direction) {
+        case 'U' -> pacman.image = pacmanUpImg;
+        case 'D' -> pacman.image = pacmanDownImg;
+        case 'L' -> pacman.image = pacmanLeftImg;
+        case 'R' -> pacman.image = pacmanRightImg;
+    }
+    nextDirection = ' ';
+  }
+
   /**
    * update object x and y positions
    */
@@ -262,6 +329,9 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         pacman.x = 0;
     }
 
+    // update pacman direction from nextDirection
+    applyNextTurn();
+    
     pacman.x += pacman.velocityX;
     pacman.y += pacman.velocityY;
 
@@ -371,18 +441,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
      }
 
     switch (e.getKeyCode()) {
-      case KeyEvent.VK_UP -> {
-          pacman.updateDirection('U');
-      }
-      case KeyEvent.VK_DOWN -> {
-          pacman.updateDirection('D');
-      }
-      case KeyEvent.VK_LEFT -> {
-          pacman.updateDirection('L');
-      }
-      case KeyEvent.VK_RIGHT -> {
-          pacman.updateDirection('R');
-      }
+      case KeyEvent.VK_UP -> nextDirection = 'U';
+      case KeyEvent.VK_DOWN -> nextDirection = 'D';
+      case KeyEvent.VK_LEFT -> nextDirection = 'L';
+      case KeyEvent.VK_RIGHT -> nextDirection = 'R';
       case KeyEvent.VK_P -> { // pause game
         if (!paused) {
           paused = true;
@@ -391,21 +453,6 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
           paused = false;
           gameLoop.start();
         }
-      }
-    }
-
-    switch (pacman.direction) {
-      case 'U' -> {
-        pacman.image = pacmanUpImg;
-      }
-      case 'D' -> {
-        pacman.image = pacmanDownImg;
-      }
-      case 'L' -> {
-        pacman.image = pacmanLeftImg;
-      }
-      case 'R' -> {
-        pacman.image = pacmanRightImg;
       }
     }
   }
